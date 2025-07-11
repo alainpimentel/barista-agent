@@ -8,7 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.5";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 serve(async (req) => {
-  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = Deno.env.toObject()
+  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = Deno.env.toObject();
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
@@ -19,9 +19,13 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing bean ID" }), { status: 400 });
     }
 
-    // Fetch current times_used
-    let currentTimesUsed = 0;
-    if (increment_times_used && Number.isInteger(increment_times_used) && increment_times_used > 0) {
+    const updates: any = {};
+
+    // Handle incrementing times_used
+    if (
+      typeof increment_times_used === "number" &&
+      Number.isInteger(increment_times_used)
+    ) {
       const { data, error } = await supabase
         .from("beans")
         .select("times_used")
@@ -32,12 +36,16 @@ serve(async (req) => {
         console.error("Fetch error:", error);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
       }
-      currentTimesUsed = data.times_used || 0;
+
+      const currentTimesUsed = data.times_used || 0;
+      const newTimesUsed = Math.max(currentTimesUsed + increment_times_used, 0); // safeguard
+
+      updates.times_used = newTimesUsed;
     }
 
-    const updates: any = {};
-    if (active !== undefined) updates.active = active;
-    if (increment_times_used) updates.times_used = currentTimesUsed + increment_times_used;
+    if (typeof active === "boolean") {
+      updates.active = active;
+    }
 
     const { error: updateError } = await supabase
       .from("beans")
@@ -56,8 +64,6 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Invalid request body" }), { status: 400 });
   }
 });
-
-
 
 /* To invoke locally:
 
