@@ -1,0 +1,24 @@
+# Node.js / Deno
+node_modules/
+dist/
+.env
+.DS_Store
+
+# Supabase
+.supabase/
+supabase/.temp/
+supabase/.output/
+supabase/migrations/dev/ # if you don't want to track temp migration state
+supabase/migrations/remote/ # optional: ignore prod dumps
+supabase/docker/
+supabase/config.toml
+
+# Vite / Build tools (optional)
+*.log
+*.tsbuildinfo
+*.cache/
+*.sqlite
+
+# OS/System
+*.swp
+*.bak
