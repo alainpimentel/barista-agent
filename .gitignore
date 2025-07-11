@@ -12,6 +12,7 @@ supabase/migrations/dev/ # if you don't want to track temp migration state
 supabase/migrations/remote/ # optional: ignore prod dumps
 supabase/docker/
 supabase/config.toml
+.env.local
 
 # Vite / Build tools (optional)
 *.log
