@@ -8,14 +8,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Create Supabase client using environment variables
-const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = Deno.env.toObject()
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-// Log env vars to verify they’re being picked up
-console.log("SUPABASE_URL =", supabaseUrl);
-console.log("SUPABASE_SERVICE_ROLE_KEY =", supabaseServiceKey ? "Loaded" : "Missing");
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 Deno.serve(async (_req) => {
   try {

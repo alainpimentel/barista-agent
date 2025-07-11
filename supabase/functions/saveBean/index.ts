@@ -49,6 +49,8 @@ serve(async (req) => {
   })
 })
 
+// TODO
+// * Missing roast level
 
 /* To invoke locally:
 

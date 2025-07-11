@@ -3,66 +3,60 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
+// deno-lint-ignore-file
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.5";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-console.log("🟢 updateBean function is running");
 
 serve(async (req) => {
-  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = Deno.env.toObject();
-
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return new Response(
-      JSON.stringify({ error: "Missing environment variables" }),
-      { status: 500 }
-    );
-  }
-
+  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = Deno.env.toObject()
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  const body = await req.json();
-  const { id, increment_times_used, ...fieldsToUpdate } = body;
+  try {
+    const body = await req.json();
+    const { id, active, increment_times_used } = body;
 
-  if (!id) {
-    return new Response(
-      JSON.stringify({ error: "Missing bean id" }),
-      { status: 400 }
-    );
-  }
-
-  if (increment_times_used) {
-    const { error } = await supabase.rpc("increment_times_used", {
-      bean_id: id,
-    });
-
-    if (error) {
-      console.error("Failed to increment times_used:", error);
-      return new Response(
-        JSON.stringify({ error: "Failed to increment times_used" }),
-        { status: 500 }
-      );
+    if (!id) {
+      return new Response(JSON.stringify({ error: "Missing bean ID" }), { status: 400 });
     }
-  }
 
-  if (Object.keys(fieldsToUpdate).length > 0) {
-    const { error } = await supabase
+    // Fetch current times_used
+    let currentTimesUsed = 0;
+    if (increment_times_used && Number.isInteger(increment_times_used) && increment_times_used > 0) {
+      const { data, error } = await supabase
+        .from("beans")
+        .select("times_used")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Fetch error:", error);
+        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      }
+      currentTimesUsed = data.times_used || 0;
+    }
+
+    const updates: any = {};
+    if (active !== undefined) updates.active = active;
+    if (increment_times_used) updates.times_used = currentTimesUsed + increment_times_used;
+
+    const { error: updateError } = await supabase
       .from("beans")
-      .update(fieldsToUpdate)
+      .update(updates)
       .eq("id", id);
 
-    if (error) {
-      console.error("Failed to update bean:", error);
-      return new Response(
-        JSON.stringify({ error: "Failed to update bean" }),
-        { status: 500 }
-      );
+    if (updateError) {
+      console.error("Update error:", updateError);
+      return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
     }
-  }
 
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { "Content-Type": "application/json" },
-  });
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    return new Response(JSON.stringify({ error: "Invalid request body" }), { status: 400 });
+  }
 });
+
 
 
 /* To invoke locally:
