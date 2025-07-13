@@ -14,40 +14,18 @@ serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    const body = await req.json();
+    const rawText = await req.text();
+    const body = JSON.parse(rawText);
 
+    /* ↓ ADD THIS ↓ */
     const {
-      bean_id,
-      method,
-      dose_in_g,
-      yield_out_g,
-      brew_time_sec,
-      water_temp_c,
-      grind_setting,
-      notes,
-      ai_used,
-      ai_suggestion,
-      rating,
-      flavor_notes,
-
-      // flattened bean info
-      bean_name,
-      bean_origin,
-      bean_process,
-      bean_notes,
-
-      // rating fields
-      acidity,
-      bitterness,
-      body,
-      balance,
-      clarity,
-      sweetness_detected,
-      crema_quality,
-      finish_tags,
-      flavor_tags,
-      user_notes,
-      overall_rating,
+      bean_id, method, dose_in_g, yield_out_g, brew_time_sec,
+      water_temp_c, grind_setting, notes, ai_used, ai_suggestion,
+      rating, flavor_notes,
+      bean_name, bean_origin, bean_process, bean_notes,
+      acidity, bitterness, body: bodyScore, balance, clarity,
+      sweetness_detected, crema_quality,
+      finish_tags, flavor_tags, user_notes, overall_rating
     } = body;
 
     const [valid, reason] = isValidBrew(body);
@@ -61,7 +39,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: `Invalid method: ${method}` }), { status: 400 });
     }
 
-    const { error } = await supabase.from("brews").insert({
+    const { data, error } = await supabase.from("brews").insert({
       bean_id,
       method: normalizedMethod,
       dose_in_g,
@@ -84,7 +62,7 @@ serve(async (req) => {
       // new rating fields
       acidity,
       bitterness,
-      body,
+      body: bodyScore,
       balance,
       clarity,
       sweetness_detected,
@@ -93,14 +71,19 @@ serve(async (req) => {
       flavor_tags,
       user_notes,
       overall_rating,
-    });
+    })
+    .select()
+    .single();
 
     if (error) {
       console.error("Insert error:", error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    return new Response(JSON.stringify({ bean: data[0] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }); 
 
   } catch (err) {
     console.error("Unexpected error:", err);

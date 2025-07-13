@@ -21,7 +21,7 @@ serve(async (req) => {
 
   const body = await req.json()
 
-  const { name, roaster, roast_date, process, origin, notes } = body
+  const { name, roaster, roast_date, type, process, origin, notes } = body
 
   if (!name) {
     return new Response(JSON.stringify({ error: "Missing required field: name" }), {
@@ -32,7 +32,7 @@ serve(async (req) => {
 
   const { data, error } = await supabase
     .from("beans")
-    .insert([{ name, roaster, roast_date, process, origin, notes }])
+    .insert([{ name, roaster, roast_date, type, process, origin, notes }])
     .select()
 
   if (error) {
@@ -51,6 +51,7 @@ serve(async (req) => {
 
 // TODO
 // * Missing roast level
+// * Missing validation
 
 /* To invoke locally:
 
