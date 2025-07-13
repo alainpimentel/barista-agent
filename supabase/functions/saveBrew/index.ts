@@ -29,6 +29,25 @@ serve(async (req) => {
       ai_suggestion,
       rating,
       flavor_notes,
+
+      // flattened bean info
+      bean_name,
+      bean_origin,
+      bean_process,
+      bean_notes,
+
+      // rating fields
+      acidity,
+      bitterness,
+      body,
+      balance,
+      clarity,
+      sweetness_detected,
+      crema_quality,
+      finish_tags,
+      flavor_tags,
+      user_notes,
+      overall_rating,
     } = body;
 
     const [valid, reason] = isValidBrew(body);
@@ -55,6 +74,25 @@ serve(async (req) => {
       ai_suggestion,
       rating,
       flavor_notes,
+
+      // new bean metadata
+      bean_name,
+      bean_origin,
+      bean_process,
+      bean_notes,
+
+      // new rating fields
+      acidity,
+      bitterness,
+      body,
+      balance,
+      clarity,
+      sweetness_detected,
+      crema_quality,
+      finish_tags,
+      flavor_tags,
+      user_notes,
+      overall_rating,
     });
 
     if (error) {
