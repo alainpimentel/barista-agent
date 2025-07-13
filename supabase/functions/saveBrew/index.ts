@@ -72,7 +72,7 @@ serve(async (req) => {
       user_notes,
       overall_rating,
     })
-    .select()
+    .select("*")
     .single();
 
     if (error) {
@@ -80,7 +80,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 
-    return new Response(JSON.stringify({ bean: data[0] }), {
+    console.log("Inserted brew:", data);
+    return new Response(JSON.stringify({ bean: data }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     }); 
