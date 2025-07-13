@@ -57,7 +57,7 @@ Deno.serve(async (_req) => {
       supabase functions deploy listActiveBeans
       supabase functions serve
 
-    DEV:
+    DEV: (first supabase start) - http://127.0.0.1:54323/project/default
       1. Add table schemas from the real supa db
       2. Insert some data
       INSERT INTO public.beans (id, name, roaster, roast_date, process, origin, notes, active, times_used, created_at)
