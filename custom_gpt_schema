@@ -1,0 +1,313 @@
+openapi: 3.1.0
+info:
+  title: Barista Agent API
+  version: 1.0.0
+servers:
+  - url: https://wyfvtqovnaicklfpciwz.supabase.co/functions/v1
+paths:
+  /listActiveBeans:
+    get:
+      operationId: listActiveBeans
+      summary: Retrieve a list of active coffee beans
+      responses:
+        "200":
+          description: A list of active beans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListActiveBeansResponse"
+        "401":
+          description: Unauthorized
+
+  /saveBean:
+    post:
+      operationId: saveBean
+      summary: Save a new coffee bean entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveBeanRequest"
+      responses:
+        "200":
+          description: Bean saved successfully
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+
+  /updateBean:
+    post:
+      operationId: updateBean
+      summary: Update a coffee bean's metadata (e.g. active state, usage count)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBeanRequest"
+      responses:
+        "200":
+          description: Bean updated successfully
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+
+  /saveBrew:
+    post:
+      operationId: saveBrew
+      summary: Save a new brew log
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveBrewRequest"
+      responses:
+        "200":
+          description: Brew saved successfully
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+
+  /updateBrew:
+    post:
+      operationId: updateBrew
+      summary: Update an existing brew entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBrewRequest"
+      responses:
+        "200":
+          description: Brew updated successfully
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+  
+
+components:
+  schemas:
+    Bean:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        roaster:
+          type: string
+        roast_date:
+          type: string
+          format: date
+        process:
+          type: string
+        origin:
+          type: string
+        notes:
+          type: string
+        active:
+          type: boolean
+        times_used:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    ListActiveBeansResponse:
+      type: object
+      properties:
+        beans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Bean"
+
+    SaveBeanRequest:
+      type: object
+      required:
+        - name
+        - roaster
+        - roast_date
+        - type
+        - process
+        - origin
+        - notes
+      properties:
+        name:
+          type: string
+        roaster:
+          type: string
+        roast_date:
+          type: string
+          format: date
+        type:
+          type: string
+        process:
+          type: string
+        origin:
+          type: string
+        notes:
+          type: string
+
+    UpdateBeanRequest:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+        active:
+          type: boolean
+          description: Set to false to mark the bean as finished
+        increment_times_used:
+          type: integer
+          description: Change in times used (can be negative)
+
+    SaveBrewRequest:
+      type: object
+      required:
+        - bean_id
+        - method
+        - dose_in_g
+        - yield_out_g
+        - brew_time_sec
+        - water_temp_c
+        - grind_setting
+      properties:
+        bean_id:
+          type: string
+          format: uuid
+        method:
+          type: string
+          description: Brew method (e.g. v60, espresso, aeropress)
+        dose_in_g:
+          type: number
+        yield_out_g:
+          type: number
+        brew_time_sec:
+          type: integer
+        water_temp_c:
+          type: integer
+        grind_setting:
+          type: integer
+        notes:
+          type: string
+        ai_used:
+          type: boolean
+        ai_suggestion:
+          type: string
+        rating:
+          type: integer
+        flavor_notes:
+          type: string
+
+        # Flattened bean info
+        bean_name:
+          type: string
+        bean_origin:
+          type: string
+        bean_process:
+          type: string
+        bean_notes:
+          type: string
+
+        # Ratings
+        acidity:
+          type: integer
+        bitterness:
+          type: integer
+        body:
+          type: integer
+        balance:
+          type: integer
+        clarity:
+          type: integer
+        sweetness_detected:
+          type: boolean
+        crema_quality:
+          type: string
+        finish_tags:
+          type: array
+          items:
+            type: string
+        flavor_tags:
+          type: array
+          items:
+            type: string
+        user_notes:
+          type: string
+        overall_rating:
+          type: integer
+
+    UpdateBrewRequest:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+        method:
+          type: string
+        dose_in_g:
+          type: number
+        yield_out_g:
+          type: number
+        brew_time_sec:
+          type: integer
+        water_temp_c:
+          type: integer
+        grind_setting:
+          type: integer
+        notes:
+          type: string
+        ai_used:
+          type: boolean
+        ai_suggestion:
+          type: string
+        rating:
+          type: integer
+        flavor_notes:
+          type: string
+        bean_name:
+          type: string
+        bean_origin:
+          type: string
+        bean_process:
+          type: string
+        bean_notes:
+          type: string
+        acidity:
+          type: integer
+        bitterness:
+          type: integer
+        body:
+          type: integer
+        balance:
+          type: integer
+        clarity:
+          type: integer
+        sweetness_detected:
+          type: boolean
+        crema_quality:
+          type: string
+        finish_tags:
+          type: array
+          items:
+            type: string
+        flavor_tags:
+          type: array
+          items:
+            type: string
+        user_notes:
+          type: string
+        overall_rating:
+          type: integer
