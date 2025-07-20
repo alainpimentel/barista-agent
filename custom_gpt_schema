@@ -1,9 +1,11 @@
 openapi: 3.1.0
 info:
   title: Barista Agent API
-  version: 1.0.0
+  version: 1.1.0
+
 servers:
   - url: https://wyfvtqovnaicklfpciwz.supabase.co/functions/v1
+
 paths:
   /listActiveBeans:
     get:
@@ -16,8 +18,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListActiveBeansResponse"
-        "401":
-          description: Unauthorized
+        "401": { description: Unauthorized }
 
   /saveBean:
     post:
@@ -30,17 +31,14 @@ paths:
             schema:
               $ref: "#/components/schemas/SaveBeanRequest"
       responses:
-        "200":
-          description: Bean saved successfully
-        "400":
-          description: Invalid input
-        "401":
-          description: Unauthorized
+        "200": { description: Bean saved successfully }
+        "400": { description: Invalid input }
+        "401": { description: Unauthorized }
 
   /updateBean:
     post:
       operationId: updateBean
-      summary: Update a coffee bean's metadata (e.g. active state, usage count)
+      summary: Update a coffee bean's metadata
       requestBody:
         required: true
         content:
@@ -48,12 +46,9 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdateBeanRequest"
       responses:
-        "200":
-          description: Bean updated successfully
-        "400":
-          description: Invalid input
-        "401":
-          description: Unauthorized
+        "200": { description: Bean updated successfully }
+        "400": { description: Invalid input }
+        "401": { description: Unauthorized }
 
   /saveBrew:
     post:
@@ -66,12 +61,9 @@ paths:
             schema:
               $ref: "#/components/schemas/SaveBrewRequest"
       responses:
-        "200":
-          description: Brew saved successfully
-        "400":
-          description: Invalid input
-        "401":
-          description: Unauthorized
+        "200": { description: Brew saved successfully }
+        "400": { description: Invalid input }
+        "401": { description: Unauthorized }
 
   /updateBrew:
     post:
@@ -84,50 +76,59 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdateBrewRequest"
       responses:
+        "200": { description: Brew updated successfully }
+        "400": { description: Invalid input }
+        "401": { description: Unauthorized }
+
+  /listPastBrews:
+    get:
+      operationId: listPastBrews
+      summary: Get recent brews (optionally filter by bean or method)
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, default: 5, maximum: 50 }
+        - in: query
+          name: bean_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: method
+          schema: { type: string, description: "Brew method filter (e.g. v60, espresso)" }
+      responses:
         "200":
-          description: Brew updated successfully
-        "400":
-          description: Invalid input
-        "401":
-          description: Unauthorized
-  
+          description: Recent brews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  brews:
+                    type: array
+                    items: { $ref: "#/components/schemas/Brew" }
+        "400": { description: Invalid parameters }
 
 components:
   schemas:
     Bean:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        roaster:
-          type: string
-        roast_date:
-          type: string
-          format: date
-        process:
-          type: string
-        origin:
-          type: string
-        notes:
-          type: string
-        active:
-          type: boolean
-        times_used:
-          type: integer
-        created_at:
-          type: string
-          format: date-time
+        id:            { type: string, format: uuid }
+        name:          { type: string }
+        roaster:       { type: string }
+        roast_date:    { type: string, format: date }
+        process:       { type: string }
+        origin:        { type: string }
+        notes:         { type: string }
+        active:        { type: boolean }
+        times_used:    { type: integer }
+        created_at:    { type: string, format: date-time }
 
     ListActiveBeansResponse:
       type: object
       properties:
         beans:
           type: array
-          items:
-            $ref: "#/components/schemas/Bean"
+          items: { $ref: "#/components/schemas/Bean" }
 
     SaveBeanRequest:
       type: object
@@ -140,33 +141,20 @@ components:
         - origin
         - notes
       properties:
-        name:
-          type: string
-        roaster:
-          type: string
-        roast_date:
-          type: string
-          format: date
-        type:
-          type: string
-        process:
-          type: string
-        origin:
-          type: string
-        notes:
-          type: string
+        name:       { type: string }
+        roaster:    { type: string }
+        roast_date: { type: string, format: date }
+        type:       { type: string }
+        process:    { type: string }
+        origin:     { type: string }
+        notes:      { type: string }
 
     UpdateBeanRequest:
       type: object
-      required:
-        - id
+      required: [ id ]
       properties:
-        id:
-          type: string
-          format: uuid
-        active:
-          type: boolean
-          description: Set to false to mark the bean as finished
+        id:                 { type: string, format: uuid }
+        active:             { type: boolean, description: "Set to false to mark the bean as finished" }
         increment_times_used:
           type: integer
           description: Change in times used (can be negative)
@@ -182,132 +170,90 @@ components:
         - water_temp_c
         - grind_setting
       properties:
-        bean_id:
-          type: string
-          format: uuid
-        method:
-          type: string
-          description: Brew method (e.g. v60, espresso, aeropress)
-        dose_in_g:
-          type: number
-        yield_out_g:
-          type: number
-        brew_time_sec:
-          type: integer
-        water_temp_c:
-          type: integer
-        grind_setting:
-          type: integer
-        notes:
-          type: string
-        ai_used:
-          type: boolean
-        ai_suggestion:
-          type: string
-        rating:
-          type: integer
-        flavor_notes:
-          type: string
+        bean_id:       { type: string, format: uuid }
+        method:        { type: string, description: "Brew method (e.g. v60, espresso, aeropress)" }
+        dose_in_g:     { type: number }
+        yield_out_g:   { type: number }
+        brew_time_sec: { type: integer }
+        water_temp_c:  { type: integer }
+        grind_setting: { type: integer }
+        notes:         { type: string }
+        ai_used:       { type: boolean }
+        ai_suggestion: { type: string }
 
         # Flattened bean info
-        bean_name:
-          type: string
-        bean_origin:
-          type: string
-        bean_process:
-          type: string
-        bean_notes:
-          type: string
+        bean_name:    { type: string }
+        bean_origin:  { type: string }
+        bean_process: { type: string }
+        bean_notes:   { type: string }
 
         # Ratings
-        acidity:
-          type: integer
-        bitterness:
-          type: integer
-        body:
-          type: integer
-        balance:
-          type: integer
-        clarity:
-          type: integer
-        sweetness_detected:
-          type: boolean
-        crema_quality:
-          type: string
+        acidity:            { type: integer }
+        bitterness:         { type: integer }
+        body:               { type: integer }
+        balance:            { type: integer }
+        clarity:            { type: integer }
+        sweetness_detected: { type: boolean }
+        crema_quality:      { type: string }
         finish_tags:
           type: array
-          items:
-            type: string
+          items: { type: string }
         flavor_tags:
           type: array
-          items:
-            type: string
-        user_notes:
-          type: string
-        overall_rating:
-          type: integer
+          items: { type: string }
+        user_notes:     { type: string }
+        overall_rating: { type: integer }
 
     UpdateBrewRequest:
       type: object
-      required:
-        - id
+      required: [ id ]
       properties:
-        id:
-          type: string
-          format: uuid
-        method:
-          type: string
-        dose_in_g:
-          type: number
-        yield_out_g:
-          type: number
-        brew_time_sec:
-          type: integer
-        water_temp_c:
-          type: integer
-        grind_setting:
-          type: integer
-        notes:
-          type: string
-        ai_used:
-          type: boolean
-        ai_suggestion:
-          type: string
-        rating:
-          type: integer
-        flavor_notes:
-          type: string
-        bean_name:
-          type: string
-        bean_origin:
-          type: string
-        bean_process:
-          type: string
-        bean_notes:
-          type: string
-        acidity:
-          type: integer
-        bitterness:
-          type: integer
-        body:
-          type: integer
-        balance:
-          type: integer
-        clarity:
-          type: integer
-        sweetness_detected:
-          type: boolean
-        crema_quality:
-          type: string
+        id:            { type: string, format: uuid }
+        method:        { type: string }
+        dose_in_g:     { type: number }
+        yield_out_g:   { type: number }
+        brew_time_sec: { type: integer }
+        water_temp_c:  { type: integer }
+        grind_setting: { type: integer }
+        notes:         { type: string }
+        ai_used:       { type: boolean }
+        ai_suggestion: { type: string }
+        rating:        { type: integer }
+        flavor_notes:  { type: string }
+        bean_name:     { type: string }
+        bean_origin:   { type: string }
+        bean_process:  { type: string }
+        bean_notes:    { type: string }
+        acidity:            { type: integer }
+        bitterness:         { type: integer }
+        body:               { type: integer }
+        balance:            { type: integer }
+        clarity:            { type: integer }
+        sweetness_detected: { type: boolean }
+        crema_quality:      { type: string }
         finish_tags:
           type: array
-          items:
-            type: string
+          items: { type: string }
         flavor_tags:
           type: array
-          items:
-            type: string
-        user_notes:
-          type: string
-        overall_rating:
-          type: integer
+          items: { type: string }
+        user_notes:     { type: string }
+        overall_rating: { type: integer }
+ 
+    Brew:
+      type: object
+      properties:
+        id:            { type: string, format: uuid }
+        bean_id:       { type: string, format: uuid }
+        method:        { type: string }
+        dose_in_g:     { type: number }
+        yield_out_g:   { type: number }
+        brew_time_sec: { type: integer }
+        water_temp_c:  { type: integer }
+        grind_setting: { type: integer }
+        brewed_at:     { type: string, format: date-time }
+        notes:         { type: string }
+        bean_name:     { type: string }
+        bean_origin:   { type: string }
+        bean_process:  { type: string }
+        rating:        { type: integer }
