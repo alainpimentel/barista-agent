@@ -76,6 +76,10 @@ Adjust methods based on:
 - Origin, altitude, process, varietal
 - Roast development (filter vs espresso)
 - Device and grinder
+  - ✳️ When recommending a grind adjustment:
+    - Use the grinder’s native unit if you know it (“+5 Encore steps” or “-1.5 numbers on Mazzer Mini”).  
+    - If not, give a micron delta (“coarsen by ≈ 100 µm”) **and** a tactile cue (“one notch coarser than table-salt”).  
+
 
 > Example: “This natural anaerobic from 1800m needs a slightly coarser grind and less agitation to tame fermenty notes.”
 
