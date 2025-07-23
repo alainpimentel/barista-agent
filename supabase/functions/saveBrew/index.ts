@@ -1,15 +1,22 @@
 // supabase/functions/saveBrew/index.ts
-// Edge Function – inserts a brew row, safely omitting null / undefined fields
+// Edge Function – inserts a brew row, coercing floats to ints and omitting null / undefined fields
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.5";
 import { VALID_BREW_METHODS } from "../../shared/constants.ts";
 
-// Helper: remove keys whose values are null or undefined
 type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+
+// Remove keys whose values are null or undefined
 function omitNullish(obj: Record<string, unknown>): Record<string, Json> {
-  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null));
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
+  );
 }
+
+// Helper: round numeric value if finite, else undefined
+const toInt = (v: unknown): number | undefined =>
+  Number.isFinite(v as number) ? Math.round(v as number) : undefined;
 
 serve(async (req) => {
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = Deno.env.toObject();
@@ -19,20 +26,20 @@ serve(async (req) => {
     const body = await req.json();
 
     const [valid, reason] = isValidBrew(body);
-    if (!valid) return new Response(JSON.stringify({ error: reason }), { status: 400 });
+    if (!valid)
+      return new Response(JSON.stringify({ error: reason }), { status: 400 });
 
     const normalizedMethod = (body.method as string).toLowerCase();
 
-    // Build payload: any optional value that isn't valid becomes undefined, then is stripped by omitNullish()
     const brewPayload = omitNullish({
-      // Required
+      // Required (coerce to int where appropriate)
       bean_id: body.bean_id,
       method: normalizedMethod,
       dose_in_g: body.dose_in_g,
       yield_out_g: body.yield_out_g,
-      brew_time_sec: body.brew_time_sec,
-      water_temp_c: body.water_temp_c,
-      grind_setting: body.grind_setting,
+      brew_time_sec: toInt(body.brew_time_sec),
+      water_temp_c: toInt(body.water_temp_c),
+      grind_setting: toInt(body.grind_setting),
 
       // Optional core
       notes: body.notes,
@@ -47,15 +54,15 @@ serve(async (req) => {
       bean_process: body.bean_process,
       bean_notes: body.bean_notes,
 
-      // Rating breakdown – only keep valid integers
-      acidity:             Number.isInteger(body.acidity)             ? body.acidity             : undefined,
-      bitterness:          Number.isInteger(body.bitterness)          ? body.bitterness          : undefined,
-      body:                Number.isInteger(body.body)                ? body.body                : undefined,
-      balance:             Number.isInteger(body.balance)             ? body.balance             : undefined,
-      clarity:             Number.isInteger(body.clarity)             ? body.clarity             : undefined,
-      sweetness_detected:  Number.isInteger(body.sweetness_detected)  ? body.sweetness_detected  : undefined,
-      crema_quality:       Number.isInteger(body.crema_quality)       ? body.crema_quality       : undefined,
-      overall_rating:      Number.isInteger(body.overall_rating)      ? body.overall_rating      : undefined,
+      // Rating breakdown – coerce floats to ints if finite
+      acidity:            toInt(body.acidity),
+      bitterness:         toInt(body.bitterness),
+      body:               toInt(body.body),
+      balance:            toInt(body.balance),
+      clarity:            toInt(body.clarity),
+      sweetness_detected: toInt(body.sweetness_detected),
+      crema_quality:      toInt(body.crema_quality),
+      overall_rating:     toInt(body.overall_rating),
 
       // Arrays / strings
       finish_tags: Array.isArray(body.finish_tags) ? body.finish_tags : undefined,
@@ -63,7 +70,11 @@ serve(async (req) => {
       user_notes:  typeof body.user_notes === "string" ? body.user_notes : undefined,
     });
 
-    const { data, error } = await supabase.from("brews").insert(brewPayload).select("*").single();
+    const { data, error } = await supabase
+      .from("brews")
+      .insert(brewPayload)
+      .select("*")
+      .single();
 
     if (error) {
       console.error("Insert error:", error);
@@ -76,7 +87,9 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("Unexpected error:", err);
-    return new Response(JSON.stringify({ error: "Invalid request body" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "Invalid request body" }), {
+      status: 400,
+    });
   }
 });
 
@@ -87,33 +100,28 @@ function isValidBrew(payload: any): [boolean, string?] {
 
   const method = (payload.method || "").toLowerCase();
   if (!VALID_BREW_METHODS.includes(method)) {
-    return [false, `Invalid 'method': '${payload.method}'. Must be one of: ${VALID_BREW_METHODS.join(", ")}.`];
-  }
-
-  if (typeof payload.dose_in_g !== "number" || isNaN(payload.dose_in_g) || payload.dose_in_g <= 0) {
-    return [false, "'dose_in_g' must be a number greater than 0."];
-  }
-
-  if (typeof payload.yield_out_g !== "number" || isNaN(payload.yield_out_g) || payload.yield_out_g <= 0) {
-    return [false, "'yield_out_g' must be a number greater than 0."];
-  }
-
-  if (typeof payload.brew_time_sec !== "number" || !Number.isInteger(payload.brew_time_sec) || payload.brew_time_sec <= 0) {
-    return [false, "'brew_time_sec' must be a positive integer."];
+    return [
+      false,
+      `Invalid 'method': '${payload.method}'. Must be one of: ${VALID_BREW_METHODS.join(", ")}.`,
+    ];
   }
 
   if (
-    typeof payload.water_temp_c !== "number" ||
-    !Number.isInteger(payload.water_temp_c) ||
-    payload.water_temp_c < 80 ||
-    payload.water_temp_c > 100
+    typeof payload.dose_in_g !== "number" ||
+    isNaN(payload.dose_in_g) ||
+    payload.dose_in_g <= 0
   ) {
-    return [false, `'water_temp_c' must be an integer between 80 and 100. You provided: ${payload.water_temp_c}`];
+    return [false, "'dose_in_g' must be a number greater than 0."];
   }
 
-  if (typeof payload.grind_setting !== "number" || !Number.isInteger(payload.grind_setting) || payload.grind_setting < 0) {
-    return [false, `'grind_setting' must be an integer >= 0. You provided: ${payload.grind_setting}`];
+  if (
+    typeof payload.yield_out_g !== "number" ||
+    isNaN(payload.yield_out_g) ||
+    payload.yield_out_g <= 0
+  ) {
+    return [false, "'yield_out_g' must be a number greater than 0."];
   }
 
+  // Brew time, temp, grind can be float, we'll coerce later
   return [true];
 }

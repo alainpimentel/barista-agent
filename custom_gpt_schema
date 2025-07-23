@@ -202,7 +202,7 @@ components:
           type: array
           items: { type: string }
         user_notes:     { type: string }
-        overall_rating: { type: integer }
+        overall_rating: { type: number }
 
     UpdateBrewRequest:
       type: object
@@ -238,7 +238,7 @@ components:
           type: array
           items: { type: string }
         user_notes:     { type: string }
-        overall_rating: { type: integer }
+        overall_rating: { type: number }
  
     Brew:
       type: object

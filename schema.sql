@@ -68,7 +68,7 @@ CREATE TABLE brews (
   finish_tags          text[],       -- can treat as enum-like in LLM prompt
   flavor_tags          text[],
   user_notes           text,
-  overall_rating       smallint
+  overall_rating       numeric
 );
 
 CREATE INDEX brews_bean_idx  ON brews(bean_id);
