@@ -175,7 +175,7 @@ components:
         dose_in_g:     { type: number }
         yield_out_g:   { type: number }
         brew_time_sec: { type: integer }
-        water_temp_c:  { type: integer }
+        water_temp_c:  { type: integer, description: "Water temperature using integer units: 90, 95" }
         grind_setting: { type: integer }
         notes:         { type: string }
         ai_used:       { type: boolean }
@@ -188,8 +188,8 @@ components:
         bean_notes:   { type: string }
 
         # Ratings
-        acidity:            { type: integer }
-        bitterness:         { type: integer }
+        acidity:            { type: integer, description: "Acidity rating from 1-5 where 5 is desirable" }
+        bitterness:         { type: integer, description: "Bitterness rating from 1-5 where 1 is desirable" }
         body:               { type: integer }
         balance:            { type: integer }
         clarity:            { type: integer }
@@ -201,8 +201,8 @@ components:
         flavor_tags:
           type: array
           items: { type: string }
-        user_notes:     { type: string }
-        overall_rating: { type: number }
+        user_notes:     { type: string, description: "User's first impression, if they would brew again, anything else they mentioned not covered already." }
+        overall_rating: { type: number, description: "Acidity rating from 1-10 where 10 is desirable" }
 
     UpdateBrewRequest:
       type: object
